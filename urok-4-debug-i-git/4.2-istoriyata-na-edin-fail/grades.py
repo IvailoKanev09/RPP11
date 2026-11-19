@@ -17,6 +17,16 @@ def average(grades):
     return total / len(grades)
 
 
+def median(grades):
+    if not grades:
+        return None
+    ordered = sorted(grades)
+    mid = len(ordered) // 2
+    if len(ordered) % 2 == 1:
+        return float(ordered[mid])
+    return (ordered[mid - 1] + ordered[mid]) / 2
+
+
 def is_excellent(avg):
     return avg is not None and avg >= 5.50
 
