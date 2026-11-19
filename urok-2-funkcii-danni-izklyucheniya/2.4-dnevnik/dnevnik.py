@@ -19,7 +19,12 @@ STUDENTS = {
 
 def subject_average(student: dict, subject: str):
     """Среден успех по предмет. None, ако предметът липсва или няма оценки."""
-    raise NotImplementedError
+    if not student or subject not in student:
+        return None
+    grades = student[subject]
+    if not grades:
+        return None
+    return sum(grades) / len(grades)
 
 
 def overall_average(student: dict):
@@ -27,7 +32,15 @@ def overall_average(student: dict):
 
     Предмети без оценки не участват. None, ако ученикът няма нито една оценка.
     """
-    raise NotImplementedError
+    if not student:
+        return None
+    averages = [
+        avg for subject in student
+        if (avg := subject_average(student, subject)) is not None
+    ]
+    if not averages:
+        return None
+    return sum(averages) / len(averages)
 
 
 def weakest_subject(student: dict):
@@ -35,7 +48,15 @@ def weakest_subject(student: dict):
 
     При равенство — първият по азбучен ред.
     """
-    raise NotImplementedError
+    if not student:
+        return None
+    subject_avgs = {
+        subject: avg for subject in student
+        if (avg := subject_average(student, subject)) is not None
+    }
+    if not subject_avgs:
+        return None
+    return min(subject_avgs.keys(), key=lambda subj: (subject_avgs[subj], subj))
 
 
 def class_ranking(students: dict) -> list:
@@ -44,7 +65,18 @@ def class_ranking(students: dict) -> list:
     Учениците без оценки са накрая (с успех None), подредени по азбучен ред.
     При равен успех — по азбучен ред на името.
     """
-    raise NotImplementedError
+    if not students:
+        return []
+
+    rows = [(name, overall_average(data)) for name, data in students.items()]
+
+    def sort_key(item):
+        name, avg = item
+        if avg is None:
+            return (1, 0.0, name)
+        return (0, -avg, name)
+
+    return sorted(rows, key=sort_key)
 
 
 def at_risk(students: dict, threshold: float = 3.50) -> list:
@@ -52,11 +84,24 @@ def at_risk(students: dict, threshold: float = 3.50) -> list:
 
     Ученици без оценки не се включват — за тях няма данни.
     """
-    raise NotImplementedError
+    if not students:
+        return []
+
+    risky = [
+        name for name, data in students.items()
+        if (avg := overall_average(data)) is not None and avg < threshold
+    ]
+    return sorted(risky)
 
 
 if __name__ == "__main__":
-    # Напишете тук поне 8 проверки, например:
-    # assert subject_average(STUDENTS["Ани"], "история") == 6
-    # assert subject_average(STUDENTS["Георги"], "история") is None
-    pass
+    assert subject_average(STUDENTS["Ани"], "история") == 6
+    assert subject_average(STUDENTS["Георги"], "история") is None
+    assert subject_average(STUDENTS["Вера"], "история") is None
+    assert overall_average(STUDENTS["Георги"]) is None
+    assert overall_average(STUDENTS["Вера"]) == 5.5
+    assert weakest_subject(STUDENTS["Борис"]) == "български"
+    assert weakest_subject(STUDENTS["Георги"]) is None
+    assert class_ranking({}) == []
+    assert at_risk(STUDENTS) == ["Борис", "Диана"]
+    assert at_risk(STUDENTS, threshold=3.0) == []
