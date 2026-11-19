@@ -9,6 +9,8 @@ STUDENTS = {
 
 
 def average(grades):
+    if not grades:
+        return None
     total = 0
     for g in grades:
         total += g
@@ -16,31 +18,46 @@ def average(grades):
 
 
 def is_excellent(avg):
-    return avg > 5.50
+    return avg is not None and avg >= 5.50
 
 
 def ranking(students):
     result = []
     for name in students:
         result.append((name, average(students[name])))
-    result.sort(key=lambda pair: pair[1])
+    result.sort(key=lambda pair: (pair[1] is None, -(pair[1] or 0.0), pair[0]))
     return result
 
 
 def print_report(students):
     print("КЛАСАЦИЯ")
     position = 0
+    excellent_count = 0
     for name, avg in ranking(students):
         position += 1
-        mark = " *" if is_excellent(avg) else ""
+        if avg is None:
+            print(f"{position}. {name:10s} няма оценки")
+            continue
+        if is_excellent(avg):
+            excellent_count += 1
+            mark = " *"
+        else:
+            mark = ""
         print(f"{position}. {name:10s} {avg:.2f}{mark}")
+
     all_grades = []
     for name in students:
-        all_grades = students[name]
-    print(f"Среден успех на класа: {average(all_grades):.2f}")
-    print(f"Брой отличници: {len(students) - position}")
+        all_grades.extend(students[name])
+
+    class_avg = average(all_grades)
+    if class_avg is not None:
+        print(f"Среден успех на класа: {class_avg:.2f}")
+    else:
+        print("Среден успех на класа: няма оценки")
+    print(f"Брой отличници: {excellent_count}")
 
 
 if __name__ == "__main__":
     print_report(STUDENTS)
-    print(f"Най-добър ученик: {ranking(STUDENTS)[0][0]}")
+    top_student = ranking(STUDENTS)[0][0]
+    print(f"Най-добър ученик: {top_student}")
